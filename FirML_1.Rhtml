@@ -1,0 +1,149 @@
+<html>
+<h2> Project:  Practical Machine Learning </h2>
+<head>
+<title> Work-Out Routine - Predicting The Sequence</title>
+</head>
+
+<body>
+<br>
+
+</br>
+<p>
+<h2> Background </h2>
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here (see the section on the Weight Lifting Exercise Dataset).
+</p>
+
+
+<h1> Presentation </h1>
+
+<p> <h3> Libraries will be loaded </h3>
+    <h3> Confusion Matrix Results Will Be Displayed </h3> 
+    <h3> Datasets will be imported </h3>
+    <h3> Training set is partitioned and validation set is created </h3>
+</p>
+
+
+
+<!--begin.rcode
+Sys.time()
+library(caret, quietly = TRUE)
+library(psych, quietly = TRUE)
+library(corrplot, quietly = TRUE)
+library(randomForest, quietly = TRUE)
+setwd("C:/Users/jehuti1/Documents/2017_MachineLearning/projectml")
+end.rcode-->
+<h1> Results of Building The Prediction Machine </h1>
+<!--begin.rcode
+##################################################### 
+#####################################################
+pred_valid_rf22 <- predict(mymodelFit17,part_validd)
+confus <- confusionMatrix(part_validd$classe,pred_valid_rf22)
+confus$table
+accuracy <- postResample(part_validd$classe,pred_valid_rf22)
+accuracy
+Out_Of_Sample_Error <- 1 - accuracy[[1]]
+Out_Of_Sample_Error
+#######################################################
+##  START OF BUILDING THE PREDICTION MACHINE  
+#
+#######################################################
+train_dsett <- pml_training
+test_dsett <- pml_testing
+##chkpoint11 <- colSums(is.na(train_dsett))
+##### Seeking out complete cases 
+clean_traindsett <- train_dsett[,(colSums(is.na(train_dsett)) == 0)]
+#remove first six columns
+shortcleanset <- clean_traindsett[-1:-6]
+# # sapply(shortcleanset,class)
+
+############CLASSES IS STILL PRESENT###############################################
+### NOT FOR THIS CODE inTrain = createDataPartition(y = training_fewer_colsn$classe,p = 0.7,list = FALSE)
+################ FOR NEW CODE##################################
+end.rcode-->
+<h3> Partitioning Of The Training Data Set </h3>
+
+<!--begin.rcode
+newinTrain = createDataPartition( y = shortcleanset$classe, p = 0.7, list = FALSE)
+part_trainn = shortcleanset[newinTrain,]
+part_validd = shortcleanset[-newinTrain,]
+#withwindow = shortcleanset[-newinTrain,]
+####EXAMPLE newpmlt$classe <- as.factor(newpmlt$classe) ####
+#part_validd <-  withwindow[-1]
+part_validd$classe <- as.factor(part_validd$classe)
+part_trainn$classe <- as.factor(part_trainn$classe)
+end.rcode-->
+
+<h3> Exploration of Data using a  Correlation Matrix -  </h3>
+<p> Can principal component be used for dimension reduction? <p>
+
+<!--begin.rcode fig.width=7, fig.height=6
+corMatts <- cor(part_trainn[, -51])
+corrplot(corMatts,order = "FPC", method = "color" , type = "lower", tl.cex = 0.8, tl.col = rgb(0,0,0))
+############################################# WORKING
+#####preProc <- preProcess(small_train[, -51], method = "pca", thresh = 0.99)
+end.rcode-->
+<h3> Preprocessing Data for Dimension Reduction - </h3>
+<p> Principal Component Analysis - To Reduce The Number of Predictors 
+ utilized since the correlation plot reveals both high negative and positive correlation between pairs of variables </p> 
+<!--begin.rcode
+preProc351 <- preProcess(part_trainn[, -51], method = "pca", pcaComp = 35 )
+trainpc <- predict(preProc351, part_trainn[, -51])
+pca11 <- principal(trainpc, nfactors = 35, rotate = "none") 
+end.rcode-->
+<h3>  Scree Plots </h3>
+<h4>  The Scree plot assist with identifying the components needed to summarize the data. </h4> 
+<!--begin.rcode
+
+plot(pca11$values,  type = "b" , ylab = "Eigenvalues", xlab = "Component-Training")
+end.rcode-->
+
+<h3> Scree Plot Derived From The Vaid Dataset </h3>
+
+<!--begin.rcode
+valid_testPCC <- predict(preProc351, part_validd[,-51])
+end.rcode-->
+
+<!--begin.rcode
+pcavdd = principal(part_validd[,-51],nfactors = 35, rotate = "none")
+plot(pcavdd$values, type = "b", ylab = "Eigenvalues", xlab = "Component-Valid")
+end.rcode-->
+
+
+<!--begin.rcode
+#########################################################
+######################################################
+mymodelFit30jr <- train(classe ~ ., method = "rf", preProcess = "pca",trctrl = trainControl(method = "cv", number = 4) ,data = part_trainn, importance = TRUE)
+print(mymodelFit30jr)
+#final_testset <- predict(mymodelFit17jr,test_dsett)
+#final_testset
+############################### WORKING GOT SAME ANSWER AS othe CODE
+########################### AWESOME
+end.rcode-->
+
+<h2> Principal Component Graph - </h2>
+<p> The higher the value on the y-axis the more principal the component </p>
+<!--begin.rcode fig.width=7, fig.height=6
+
+varImpPlot(mymodelFit30jr$finalModel, sort = TRUE, type = 1, pch = 19, col = 1, cex = 1 ,
+           main = "Importance of the Individual P C")
+end.rcode-->
+<h2>  Commented Out Results Chunck </h2>
+<!--begin.rcode
+############################ GOOD STUFF####################################################3
+#pred_valid_rf22 <- predict(mymodelFit17,part_validd)
+#confus <- confusionMatrix(part_validd$classe,pred_valid_rf22)
+# confus$table
+
+############################ GOOD STUFF ABOVE######
+################## NEXT STUFF IS GOOD AS WEll
+# accuracy <- postResample(part_validd$classe,pred_valid_rf22)
+#accuracy
+##########
+#Out_Of_Sample_Error <- 1 - accuracy[[1]]
+#Out_Of_Sample_Error
+Sys.time()
+end.rcode-->
+
+
+</body>
+</html>
